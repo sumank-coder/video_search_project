@@ -5,10 +5,6 @@ import math
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
-# importing libraries 
-import cv2 
-import numpy as np 
-import os
 
 #pre-processing for query
 def pre_process_query(query):
@@ -58,40 +54,26 @@ def Top10_image_list(results):
             img_list.append(image)
             print(count,"\t",score, "\t", image)
             count+=1
-            script_dir = os.path.dirname(__file__) #<-- absolute dir the script is in
-            rel_path = "gic/static/"+image
-            abs_file_path = os.path.join(script_dir, rel_path)
-            print(abs_file_path)
-            cap = cv2.VideoCapture(abs_file_path) 
-            if (cap.isOpened()== False): 
-                print("Error opening video file") 
-            while(cap.isOpened()): 
-                ret, frame = cap.read() 
-                if ret == True: 
-                    cv2.imshow('Frame', frame) 
-                    if cv2.waitKey(25) & 0xFF == ord('q'): 
-                        break
-                else: 
-                    break
-            cap.release() 
-            cv2.destroyAllWindows()
-            if(count >=1):
-                break    
+            if(count >=4):
+                break
     return img_list
 
 
-'''
 def Image_search(query):
     query_processed = pre_process_query(query)
     img_query_cosine_simil = queryImg_cosine(Img_TFIDF.img_desc_TFIDF, query_processed)
     images = Top10_image_list(img_query_cosine_simil)
+    print(images)
+    #d_video = ['images/abc.mp4']
     return images
+    #return d_video
 
 '''
 
 if __name__ == "__main__":
-    query = "blue mercedes"
+    query = "water body"
     query_processed = pre_process_query(query)
     img_query_cosine_simil = queryImg_cosine(Img_TFIDF.img_desc_TFIDF, query_processed)
-    Top10_image_list(img_query_cosine_simil)
+    print_top10_results(img_query_cosine_simil)
 
+'''

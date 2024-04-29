@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SnapQuest</title>
+    <title>VideoSearch</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'images/style.css' %}">
 </head>
@@ -11,7 +11,7 @@
     <div class="row justify-content-center" style="display: flex; flex-direction: column; align-items: center;">
         <div class="col-md-12">
             <div class="logo" style="text-align: center">
-                <h1 class="text-center" style="font-family: 'Dancing Script', cursive; font-size: 5rem;">SnapQuest</h1>
+                <h1 class="text-center" style="font-family: 'Dancing Script', cursive; font-size: 5rem;">VideoSearch</h1>
             </div>
             <div class="search-form">
                 <form action="{% url 'search_results' %}" method="GET">
@@ -30,7 +30,7 @@
                     </div>
                     <br>
                     <div class="input-group">
-                        <input type="text" class="form-control search-bar" name="query" placeholder="Search images..."
+                        <input type="text" class="form-control search-bar" name="query" placeholder="Search Videos..."
                                value="{{ request.GET.query }}" required>
                         <span class="input-group-btn">
                                 <button type="submit" class="search-button">Search</button>
@@ -45,8 +45,8 @@
             <form action="{% url 'upload_image' %}" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="form-group">
-                    <input type="file" name="image" class="form-control-file" required>
-                    <button type="submit" class="btn btn-primary">Upload Image</button>
+                    <input type="file" name="video" class="form-control-file" required>
+                    <button type="submit" class="btn btn-primary">Upload Video</button>
                 </div>
 
             </form>
@@ -55,11 +55,15 @@
     <div class="row justify-content-center image-gallery" id="image-gallery"
          style="display: flex; flex-wrap: wrap; flex-direction: row !important; align-items: center;">
         {% if results %}
-            {% for image in results %}
-                <div class="col-md-4 {% if forloop.counter > 5 %} image-hidden {% endif %} ">
+            {% for video in results %}
+                <div class="col-md-4 {% if forloop.counter > 5 %} video-hidden {% endif %}">
                     {% load static %}
-                    <br><img src="{% static image %}" alt="{{ image }}" class="img-thumbnail" width="250"
-                             height="250"><br>
+                    <br>
+                    <video controls class="video-thumbnail" width="250" height="250">
+                        <source src="{% static video %}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <br>
                 </div>
                 {% if forloop.counter == 5 %}
                     <div class="col-md-12 text-center">

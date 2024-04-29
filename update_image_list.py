@@ -13,6 +13,7 @@ import numpy as np
 import io
 import aiofiles
 import shutil
+import cv2
 
 class options:
   def __init__(self):
@@ -101,7 +102,7 @@ def load_image(raw_image, device):
 def get_out_file_name(out_dir, base_name, ext):
     return os.path.join(out_dir, f"{base_name}{ext}")
 
-async def main(opt):
+async def main(opt,vid_file_name):
     print("starting")
     import models.blip
 
@@ -146,6 +147,8 @@ async def main(opt):
 
     i = 0
 
+    full_video_caption =""
+
     for idx, img_file_name in enumerate(glob.iglob(os.path.join(opt.img_dir, "*.*"))):
         if img_file_name.endswith(ext):
             caption = None
@@ -178,33 +181,34 @@ async def main(opt):
                         postfix = f"_{i}"
                         i += 1
                         caption = caption+postfix
+                    full_video_caption += (' '+caption)
 
-                    if opt.format in ["txt","text","caption"]:
-                        out_base_name = os.path.splitext(os.path.basename(img_file_name))[0]
+    if opt.format in ["txt", "text", "caption"]:
+        out_base_name = os.path.splitext(os.path.basename(img_file_name))[0]
 
-                    if opt.format in ["txt","text"]:
-                        out_file = get_out_file_name(opt.out_dir, "image_search_db", ".txt")
+    if opt.format in ["txt", "text"]:
+        out_file = get_out_file_name(opt.out_dir, "image_search_db", ".txt")
 
-                    if opt.format in ["caption"]:
-                        out_file = get_out_file_name(opt.out_dir, out_base_name, ".caption")
+    if opt.format in ["caption"]:
+        out_file = get_out_file_name(opt.out_dir, out_base_name, ".caption")
 
-                    if opt.format in ["txt","text","caption"]:
-                        print("writing caption to: ", out_file)
-                        async with aiofiles.open(out_file, "a") as out_file:  
-                            txtstr = ""
-                            head,tail = os.path.split(img_file_name)
-                            txtstr += "images/"+str(tail)+" ::: "+str(caption)+"\n"                            
-                            await out_file.write(txtstr)
+    if opt.format in ["txt", "text", "caption"]:
+        print("writing caption to: ", out_file)
+        async with aiofiles.open(out_file, "a") as out_file:
+            txtstr = ""
+            head, tail = os.path.split(vid_file_name)
+            txtstr += "videos/" + str(tail) + " ::: " + str(full_video_caption) + "\n"
+            await out_file.write(txtstr)
 
-                    if opt.format in ["filename", "mrwho", "joepenna"]:
-                        caption = caption.replace("/", "").replace("\\", "")  # must clean slashes using filename
-                        out_file = get_out_file_name(opt.out_dir, caption, file_ext)
-                        async with aiofiles.open(out_file, "wb") as out_file:
-                            await out_file.write(image_bin)
-                    elif opt.format == "json":
-                        raise NotImplementedError
-                    elif opt.format == "parquet":
-                        raise NotImplementedError
+    if opt.format in ["filename", "mrwho", "joepenna"]:
+        caption = caption.replace("/", "").replace("\\", "")  # must clean slashes using filename
+        out_file = get_out_file_name(opt.out_dir, caption, file_ext)
+        async with aiofiles.open(out_file, "wb") as out_file:
+            await out_file.write(image_bin)
+    elif opt.format == "json":
+        raise NotImplementedError
+    elif opt.format == "parquet":
+        raise NotImplementedError
 
 def isWindows():
     return sys.platform.startswith("win")
@@ -225,19 +229,49 @@ def refresh_index():
         subprocess.run(["git", "clone", "https://github.com/salesforce/BLIP", "scripts/BLIP"])
     blip_path = "scripts/BLIP"
     sys.path.append(blip_path)
-    asyncio.run(main(opt))
-
-
     source_folder = os.path.join(os.getcwd(),"gic/static/new_images")
     destination_folder = os.path.join(os.getcwd(),"gic/static/images")
+    source_video_folder = os.path.join(os.getcwd(),"gic/static/new_videos")
+    destination_video_folder = os.path.join(os.getcwd(), "gic/static/videos")
+    # Convert video to images
+    for file_name in os.listdir(source_video_folder):
+        # construct full file path
+        video_file = os.path.join(source_video_folder , file_name)
+        print("video_file name is ", video_file)
+        cam = cv2.VideoCapture(video_file)
+        currentframe = 0
+        while (True):
+            ret, frame = cam.read()
+            if ret:
+                # if video is still left continue creating images
+                name = source_folder +'/frame' + str(currentframe) + '.jpg'
+                print('Creating...' + name)
+                cv2.imwrite(name, frame)
+                cam.set(cv2.CAP_PROP_POS_MSEC, (currentframe * 1000))  # added this line
+                currentframe += 10
+            else:
+                break
+        # Release all space and windows once done
+        cam.release()
+        cv2.destroyAllWindows()
+        # get the caption generated
+        asyncio.run(main(opt,file_name))
+        # Remove temp image files
+        for file_name in os.listdir(source_folder):
+            # construct full file path
+            #source = source_folder + file_name
+            #destination = destination_folder + file_name
+            temp_image = os.path.join(source_folder , file_name)
+            os.remove(temp_image)
 
-    # fetch all files
-    for file_name in os.listdir(source_folder):
+
+    # copy video file
+    for file_name in os.listdir(source_video_folder):
         # construct full file path
         #source = source_folder + file_name
         #destination = destination_folder + file_name
-        source = os.path.join(source_folder , file_name)
-        destination = os.path.join(destination_folder , file_name)
+        source = os.path.join(source_video_folder , file_name)
+        destination = os.path.join(destination_video_folder , file_name)
         # copy only files
         if os.path.isfile(source):
             shutil.copy(source, destination)

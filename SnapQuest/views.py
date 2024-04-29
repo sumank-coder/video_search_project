@@ -38,9 +38,9 @@ def search_results(request):
     return render(request, 'landing.html', context)
 
 def upload_image(request):
-    if request.method == 'POST' and request.FILES['image']:
-        myfile = request.FILES['image']
-        fs = FileSystemStorage(os.path.join(settings.STATICFILES_DIRS[0], 'new_images'))
+    if request.method == 'POST' and request.FILES['video']:
+        myfile = request.FILES['video']
+        fs = FileSystemStorage(os.path.join(settings.STATICFILES_DIRS[0], 'new_videos'))
         filename = fs.save(myfile.name, myfile)
         #return render(request, 'landing.html')
     update_image_list.refresh_index()
