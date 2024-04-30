@@ -6,5 +6,5 @@ Method to run on non- GPU window device:
 3. Make empty directory gic/static/new_images and gic/static/new_videos
 4. Run python manage.py runserver to start django server
 
-First image upload will be slower.
+First video upload will be slower.
 
