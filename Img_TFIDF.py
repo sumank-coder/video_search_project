@@ -6,7 +6,7 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
 
-image_file = open('video_search_db.txt')
+image_file = open('image_search_db.txt')
 img_dict ={}
 
 for data in image_file:
